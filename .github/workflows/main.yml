@@ -40,3 +40,6 @@ jobs:
 
     - name: Run ESLint to check for linting issues
       run: npm run lint
+
+    - name: Complete
+      run: echo "Security checks completed successfully"
