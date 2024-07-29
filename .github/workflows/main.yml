@@ -11,8 +11,41 @@ permissions:
   security-events: write
 
 jobs:
+  sca_snyk:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Install Snyk
+      run: npm install -g snyk
+
+    - name: Authenticate Snyk
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      run: snyk auth $SNYK_TOKEN
+
+    - name: Run Snyk to check for vulnerabilities
+      run: snyk test --json > snyk_report.json
+
+    - name: Upload Snyk report
+      uses: actions/upload-artifact@v2
+      with:
+        name: snyk-report
+        path: snyk_report.json
+
   semgrep:
     runs-on: ubuntu-latest
+    needs: sca_snyk
 
     steps:
     - name: Checkout code
