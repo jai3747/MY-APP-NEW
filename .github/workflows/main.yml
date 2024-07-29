@@ -1,44 +1,43 @@
-name: Security Checks
+name: Security Scan Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  security:
+  security_scan:
+    name: Security Scan
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Git Clone
+      run: |
+        git clone https://github.com/JavaPanda30/FitMaxGym-App.git
+        cd FitMaxGym-App
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v2
       with:
-        node-version: '16'  # Ensure this matches your project's Node.js version
+        node-version: '14'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
+
+    - name: Run GitHub code scanning
+      uses: github/codeql-action/analyze@v2
 
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/node@master
-      
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-    - name: Run Semgrep to check for code issues
+    - name: Run Semgrep
       uses: returntocorp/semgrep-action@v1
       with:
-        config: auto
-      env:
-        SEMGREP_TOKEN: ${{ secrets.SEMGREP_TOKEN }}
+        config: p/default
 
-    - name: Run ESLint to check for linting issues
-      run: npm run lint
-
-    - name: Complete
-      run: echo "Security checks completed successfully"
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: semgrep.sarif
