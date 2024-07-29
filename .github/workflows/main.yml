@@ -1,0 +1,42 @@
+name: Security Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@v3
+      with:
+        args: test
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    - name: Run Semgrep to check for code issues
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: auto
+      env:
+        SEMGREP_TOKEN: ${{ secrets.SEMGREP_TOKEN }}
+
+    - name: Run ESLint to check for linting issues
+      run: npm run lint
