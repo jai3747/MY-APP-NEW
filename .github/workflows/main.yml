@@ -137,6 +137,14 @@ jobs:
       run: |
         curl https://thoughtworks.github.io/talisman/install.sh | bash
 
+    - name: Verify Talisman Installation
+      run: |
+        if ! command -v talisman &> /dev/null
+        then
+          echo "Talisman could not be found"
+          exit 1
+        fi
+
     - name: Run Talisman scan
       run: talisman --scan
 
