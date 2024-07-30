@@ -87,3 +87,23 @@ jobs:
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: semgrep.sarif
+
+  trufflehog:
+    runs-on: ubuntu-latest
+    needs: [sca_snyk, semgrep]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install TruffleHog
+      run: pip install truffleHog
+
+    - name: Run TruffleHog
+      run: trufflehog git https://github.com/${{ github.repository }} --json > trufflehog_report.json
+
+    - name: Upload TruffleHog report
+      uses: actions/upload-artifact@v2
+      with:
+        name: trufflehog-report
+        path: trufflehog_report.json
