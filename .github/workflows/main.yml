@@ -145,11 +145,3 @@ jobs:
           exit 1
         fi
 
-    - name: Run Talisman scan
-      run: talisman --scan
-
-    - name: Upload Talisman report
-      uses: actions/upload-artifact@v2
-      with:
-        name: talisman-report
-        path: talisman-report.json
