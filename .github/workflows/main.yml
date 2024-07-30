@@ -100,7 +100,8 @@ jobs:
       run: pip install truffleHog
 
     - name: Run TruffleHog
-      run: trufflehog git https://github.com/${{ github.repository }} --json > trufflehog_report.json
+      run: |
+        trufflehog git --json https://github.com/jai3747/MY-APP-NEW > trufflehog_report.json
 
     - name: Upload TruffleHog report
       uses: actions/upload-artifact@v2
