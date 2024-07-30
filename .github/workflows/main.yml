@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,7 +14,6 @@ permissions:
 jobs:
   sca_snyk:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -55,7 +55,6 @@ jobs:
   semgrep:
     runs-on: ubuntu-latest
     needs: sca_snyk
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -90,21 +89,51 @@ jobs:
 
   trufflehog:
     runs-on: ubuntu-latest
-    needs: [sca_snyk, semgrep]
-
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Install TruffleHog
-      run: pip install truffleHog
-
-    - name: Run TruffleHog
-      run: |
-        trufflehog git --json https://github.com/jai3747/MY-APP-NEW > trufflehog_report.json
-
-    - name: Upload TruffleHog report
-      uses: actions/upload-artifact@v2
+      uses: actions/checkout@v3
       with:
-        name: trufflehog-report
-        path: trufflehog_report.json
+        fetch-depth: 0
+
+    - name: Determine scan range
+      id: scan_range
+      run: |
+        if [ "${{ github.event_name }}" == "push" ]; then
+          BASE="${{ github.event.before }}"
+          HEAD="${{ github.event.after }}"
+        elif [ "${{ github.event_name }}" == "pull_request" ]; then
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+        else
+          BASE=$(git rev-parse HEAD~10)
+          HEAD="HEAD"
+        fi
+        echo "base=${BASE}" >> $GITHUB_OUTPUT
+        echo "head=${HEAD}" >> $GITHUB_OUTPUT
+
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ steps.scan_range.outputs.base }}
+        head: ${{ steps.scan_range.outputs.head }}
+        extra_args: --debug --only-verified --json
+
+    - name: Print TruffleHog Output
+      if: always()
+      run: |
+        echo "TruffleHog Scan Results:"
+        if [ -f trufflehog-results.json ]; then
+          cat trufflehog-results.json
+        else
+          echo "No results file found. TruffleHog did not detect any issues."
+        fi
+        echo "End of TruffleHog Scan Results"
+
+    - name: Upload TruffleHog results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: trufflehog-results
+        path: trufflehog-results.json
+        if-no-files-found: ignore
