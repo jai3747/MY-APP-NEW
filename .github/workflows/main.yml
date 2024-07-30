@@ -135,8 +135,7 @@ jobs:
 
     - name: Install Talisman
       run: |
-        wget https://github.com/thoughtworks/talisman/releases/download/v1.1.0/talisman-linux-amd64 -O /usr/local/bin/talisman
-        chmod +x /usr/local/bin/talisman
+        curl https://thoughtworks.github.io/talisman/install.sh | bash
 
     - name: Run Talisman scan
       run: talisman --scan
