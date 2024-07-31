@@ -126,22 +126,6 @@ jobs:
         path: trufflehog-results.json
         if-no-files-found: ignore
 
-  talisman:
-    runs-on: ubuntu-latest
-    needs: [sca_snyk, semgrep, trufflehog]
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Install Talisman
-      run: |
-        curl https://thoughtworks.github.io/talisman/install.sh | bash
-
-    - name: Verify Talisman Installation
-      run: |
-        if ! command -v talisman &> /dev/null
-        then
-          echo "Talisman could not be found"
-          exit 1
-        fi
+  
+  
 
